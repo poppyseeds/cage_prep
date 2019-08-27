@@ -57,3 +57,25 @@ for tag in "${tags[@]}" ; do
 	done
 done
 
+#!/bin/bash
+
+##FROM MAZDAX SALAVATI
+#refactor for efficiency
+
+for f in ../input/*.bam;do
+
+        BWNAME=$(basename -s .bam $f)
+
+        echo $BWNAME
+
+        bedtools genomecov -ibam $f -d -strand + | awk -v width=1 '!($1~/^NW/)&&($3!=0) {print $1,$2,$2+width,$3}' | sort -k1,1 -k2,2n --parallel=6 > ${BWNAME}.plus.bedGraph
+
+        ./bedGraphToBigWig ${BWNAME}.plus.bedGraph ref_conv ${BWNAME}.plus.bw
+
+        bedtools genomecov -ibam $f -d -strand - | awk -v width=1 '!($1~/^NW/)&&($3!=0) {print $1,$2,$2+width,$3}' | sort -k1,1 -k2,2n --parallel=6 > ${BWNAME}.minus.bedGraph
+
+        ./bedGraphToBigWig ${BWNAME}.minus.bedGraph ref_conv ${BWNAME}.minus.bw
+
+        echo "$BWNAME both files are done!"
+
+done;
